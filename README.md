@@ -10,7 +10,7 @@ TCGdex의 카드팩·카드 카탈로그를 불러오는 반응형 웹 앱입니
 npm start
 ```
 
-브라우저에서 `http://localhost:3000`을 엽니다. TCGdex API에 연결할 수 있어야 카드팩 목록이 표시됩니다. `.env.example`의 설정은 기본값과 같으므로 별도 설정 없이 시작할 수 있습니다. 환경 변수를 바꾸는 경우 현재 터미널 세션에 설정한 뒤 `npm start`를 실행하거나, 배포 플랫폼의 환경 변수 설정을 이용하세요.
+브라우저에서 `http://localhost:3000`을 엽니다. `.env.example`의 설정은 기본값과 같으므로 별도 설정 없이 시작할 수 있습니다. API 프록시가 403/404로 응답하는 정적 호스팅 환경에서도 브라우저가 공개 TCGdex API로 재시도하도록 fallback을 추가했습니다. 환경 변수를 바꾸는 경우 현재 터미널 세션에 설정한 뒤 `npm start`를 실행하거나, 배포 플랫폼의 환경 변수 설정을 이용하세요.
 
 예: PowerShell
 
@@ -25,15 +25,19 @@ npm start
 ### 카드팩과 카드 정보 — TCGdex
 
 - API: `https://api.tcgdex.net/v2/ko/sets`, `/sets/{id}`, `/cards/{id}`
-- 이 프로젝트의 기본 API base: `https://api.tcgdex.net/v2/ko`
+- 이 프로젝트의 기본 API base: 한국어 `https://api.tcgdex.net/v2/ko`, 국제 카드 검색용 영어 `https://api.tcgdex.net/v2/en`
 - API 키: 기본 공개 API 사용 시 필요하지 않습니다.
 - 웹사이트: [tcgdex.net](https://www.tcgdex.net/) · [API 문서](https://tcgdex.dev/)
 - TCGdex는 게임 카드 카탈로그이며 국내의 현재 판매 여부, 한국 소매 가격, 카드 시세를 보증하는 판매처가 아닙니다. `ko` 지역 데이터가 제공되지 않거나 API에서 오류가 나면 오류 상태를 표시합니다. 다른 지원 언어 카탈로그를 시험할 때는 `TCGDEX_API_BASE`를 예를 들어 `https://api.tcgdex.net/v2/en`으로 변경할 수 있지만, 해당 카드와 세트가 한국판이라는 의미는 아닙니다.
+- 한국어 카드 카탈로그에는 일부 카드만 존재할 수 있어 통합 검색은 TCGdex 영어 카드 목록도 함께 검색합니다. PokeAPI Pokédex의 한국어/영어 포켓몬 이름 매핑을 이용해 `가디안`과 같은 한국 이름으로 국제판 카드명을 찾아 보여주며, 해당 카드는 국제판 데이터로 표시합니다. 같은 이름의 한국판 시세로 해석하지 않습니다.
+- 검색 결과는 레어도 묶음으로 필터링할 수 있습니다. AR은 Art/Illustration Rare, SR은 Ultra/Super Rare, RR은 Double/Triple Rare, UR은 Hyper/Secret Rare를 묶어 보여주며 SAR, 일반, 기타도 별도로 고를 수 있습니다. TCGdex의 원본 레어도 문자열은 카드마다 함께 표시합니다.
 - 판매 가격과 발매 정보가 공식적으로 확인되지 않으면 판매 중·정가로 표시하지 않습니다. 최신 한국 판매 카드팩을 포괄하는 공식 API가 연결되지 않은 상태에서는 오래되었거나 근거가 불명확한 팩 이름을 fallback으로 만들지 않습니다. API 데이터 갱신 시각과 국내 판매 상태 미확인을 화면에서 구분합니다.
 
-### 카드 시세 — 별도 공급자 연동 필요
+### 카드 시세 — 해외 참고 시세 및 별도 한국 공급자
 
-한국판 카드에 대한 신뢰할 수 있고 공개된 무료 시세 API가 기본적으로 제공된다고 가정하지 않습니다. 실제 거래 데이터 공급자와 사용 권한을 확보한 뒤 `PRICE_API_URL`을 서버 환경 변수로 설정합니다. 공급자는 아래 bulk 응답 형식을 제공해야 합니다. 외부 공급자의 API 키가 필요하면 서버의 `PRICE_API_KEY` 환경 변수로 넣으세요. 키를 `script.js`나 HTML에 넣으면 안 됩니다.
+TCGdex 카드 정보에 TCGplayer(USD) 또는 Cardmarket(EUR) 가격이 포함된 경우, 앱은 실제 제공된 가격과 갱신일을 사용하고 공개 환율로 KRW 참고 환산값을 함께 표시합니다. 이는 해외 시장 가격이며 한국판·국내 거래 가격이 아닙니다. 한국 시세로 오인되지 않도록 시장 지역과 원래 통화, 출처를 함께 표시합니다. 한국판 카드에 대한 신뢰할 수 있고 공개된 무료 시세 API가 기본적으로 제공된다고 가정하지 않습니다. 한국 시장 가격이 필요하면 실제 거래 데이터 공급자와 사용 권한을 확보한 뒤 `PRICE_API_URL`을 서버 환경 변수로 설정하세요.
+
+가격 공급자는 아래 bulk 응답 형식을 제공해야 합니다. 외부 공급자의 API 키가 필요하면 서버의 `PRICE_API_KEY` 환경 변수로 넣으세요. 키를 `script.js`나 HTML에 넣으면 안 됩니다. 설정한 공급자의 카드별 가격이 누락된 경우 TCGdex 국제 가격이 있으면 참고 가격으로 fallback됩니다.
 
 요청: `GET {PRICE_API_URL}?ids={comma-separated-card-ids}`
 
@@ -66,6 +70,7 @@ Pokemon TCG API(`https://pokemontcg.io/`) 및 TCGplayer/Cardmarket 데이터는 
 - `GET /api/sets`: TCGdex 카드팩 목록.
 - `GET /api/sets/{id}`: 카드팩과 카드 목록, 설정 시 bulk 가격 정보.
 - `GET /api/cards/{id}`: 카드 상세 및 설정 시 가격.
+- `GET /api/search?q={이름}`: 한국어·영어 카드 카탈로그와 카드팩을 통합 검색하고 가능한 경우 TCGplayer/Cardmarket 시장가격을 환산해 함께 반환합니다. 카드 결과가 많으면 `offset`으로 다음 결과를 가져옵니다.
 - `GET /api/prices?ids=...`: 설정된 가격 공급자에서 가격을 확인.
 - 서버 메모리 캐시: 카드팩/카드 기본 15분, 가격 5분, 환율 6시간. `CACHE_TTL_SECONDS`로 카탈로그 캐시를 조절합니다.
 

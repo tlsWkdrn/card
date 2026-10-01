@@ -50,7 +50,7 @@
       <section class="stats-row" aria-label="카드 통계">
         <article class="stat-card"><div class="stat-icon purple">▧</div><div><span class="stat-label">등록된 카드팩</span><strong id="stat-sets">—</strong><small>TCGdex 카탈로그 기준</small></div></article>
         <article class="stat-card"><div class="stat-icon gold">✦</div><div><span class="stat-label">불러온 카드 중 고가</span><strong id="stat-high">—</strong><small>확인 가격 100,000원 이상</small></div></article>
-        <article class="stat-card"><div class="stat-icon green">↗</div><div><span class="stat-label">확인된 가격 데이터</span><strong id="stat-coverage">연동 대기</strong><small>불러온 카드 기준</small></div></article>
+        <article class="stat-card"><div class="stat-icon green">↗</div><div><span class="stat-label">확인된 가격 데이터</span><strong id="stat-coverage">연동 대기</strong><small>해외 시세 환산 또는 가격 API</small></div></article>
         <article class="stat-card update-stat"><div class="stat-icon blue">◷</div><div><span class="stat-label">마지막 업데이트</span><strong id="stat-updated">—</strong><small>데이터 출처와 함께 표시</small></div></article>
       </section>
 
@@ -72,7 +72,7 @@
         <div id="empty-state" class="empty-state hidden"><div class="empty-icon">⌕</div><strong id="empty-title">아직 표시할 카드팩이 없습니다</strong><p id="empty-copy">카탈로그 API 연결 상태를 확인한 뒤 다시 시도해 주세요.</p><button class="primary-button" id="empty-retry">다시 불러오기 <span>→</span></button></div>
         <div id="pack-grid" class="pack-grid"></div>
         <div id="card-view" class="card-view hidden"></div>
-        <div class="source-note"><span class="source-icon">ⓘ</span><span>카드 목록: <b>TCGdex API</b> · 가격 정보: 별도 가격 API 연결 시 표시 · 한국 내 판매 여부는 공식 판매 정보가 확인되지 않으면 미확인으로 표시합니다.</span></div>
+        <div class="source-note"><span class="source-icon">ⓘ</span><span>카드 목록: <b>TCGdex API</b> · 가격: TCGplayer/Cardmarket 해외 시세 또는 별도 가격 API · 해외 시세 환산값은 한국판 거래 가격과 다를 수 있습니다. 국내 판매 여부는 공식 판매 정보가 확인되지 않으면 미확인으로 표시합니다.</span></div>
       </section>
 
       <section class="insight-band">
