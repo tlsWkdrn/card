@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f6f8" />
+    <meta name="description" content="포켓몬 카드와 카드팩 정보를 탐색하고 확인된 시세를 살펴보세요." />
+    <title>카드로그 — 포켓몬 카드 시세 탐색</title>
+    <link rel="preconnect" href="https://api.tcgdex.net" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#home" aria-label="카드로그 홈">
+        <span class="brand-mark"><span></span></span>
+        <span>card<span class="brand-accent">log</span><small>POKÉMON TCG EXPLORER</small></span>
+      </a>
+      <nav class="top-nav" aria-label="주요 메뉴">
+        <a class="nav-link active" href="#home" data-view="home">카드팩</a>
+        <button class="nav-link" data-view="cards">카드 탐색</button>
+        <button class="nav-link" data-view="ranking">가격 랭킹</button>
+      </nav>
+      <div class="top-actions">
+        <span class="live-status"><i></i> API 연결 대기</span>
+        <button class="icon-button" id="theme-toggle" aria-label="테마 전환" title="다크 모드 전환">◐</button>
+      </div>
+    </header>
+
+    <main id="home">
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-dot"></span> THE POKÉMON CARD MARKET, ORGANIZED</div>
+          <h1>좋아하는 카드의<br /><em>가치를 발견하다.</em></h1>
+          <p>카드팩부터 희귀 카드까지, 확인 가능한 정보와 출처를 한곳에서 살펴보세요.</p>
+          <div class="hero-search">
+            <span class="search-symbol">⌕</span>
+            <input id="search-input" type="search" placeholder="카드 이름, 번호, 카드팩 검색" autocomplete="off" />
+            <kbd>/</kbd>
+          </div>
+          <div class="hero-footnote"><span>⌕</span> 카드명 · 카드 번호 · 카드팩 이름으로 검색</div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orb orb-one"></div><div class="orb orb-two"></div>
+          <div class="card-back"><div class="card-back-ring"><div class="card-back-core"></div></div><span>POKÉMON</span></div>
+          <div class="art-caption">COLLECT WHAT<br />YOU LOVE <b>✦</b></div>
+        </div>
+      </section>
+
+      <section class="stats-row" aria-label="카드 통계">
+        <article class="stat-card"><div class="stat-icon purple">▧</div><div><span class="stat-label">등록된 카드팩</span><strong id="stat-sets">—</strong><small>TCGdex 카탈로그 기준</small></div></article>
+        <article class="stat-card"><div class="stat-icon gold">✦</div><div><span class="stat-label">불러온 카드 중 고가</span><strong id="stat-high">—</strong><small>확인 가격 100,000원 이상</small></div></article>
+        <article class="stat-card"><div class="stat-icon green">↗</div><div><span class="stat-label">확인된 가격 데이터</span><strong id="stat-coverage">연동 대기</strong><small>불러온 카드 기준</small></div></article>
+        <article class="stat-card update-stat"><div class="stat-icon blue">◷</div><div><span class="stat-label">마지막 업데이트</span><strong id="stat-updated">—</strong><small>데이터 출처와 함께 표시</small></div></article>
+      </section>
+
+      <section class="catalog-section" id="catalog">
+        <div class="section-heading">
+          <div><div class="eyebrow section-eyebrow">EXPLORE THE COLLECTION</div><h2 id="section-title">카드팩 둘러보기 <span class="heading-count" id="result-count">불러오는 중</span></h2><p class="section-subtitle" id="section-subtitle">카탈로그에 등록된 카드팩과 발매 정보를 확인해 보세요.</p></div>
+          <div class="heading-actions"><button class="quiet-button" id="refresh-button">↻ <span>새로고침</span></button><select id="sort-select" class="sort-select" aria-label="정렬"><option value="newest">최신 발매순</option><option value="name">이름순</option><option value="high">고가 카드 많은 순</option><option value="price">가격 높은 순</option></select></div>
+        </div>
+        <div class="filter-bar">
+          <button class="filter-chip active" data-filter="all">전체 카드팩</button>
+          <button class="filter-chip" data-filter="available">판매 중 확인된 팩</button>
+          <button class="filter-chip" data-filter="high">고가 카드 보유</button>
+          <div class="filter-spacer"></div>
+          <label class="select-filter"><span>레어도</span><select id="rarity-filter"><option value="">전체</option></select></label>
+          <label class="select-filter"><span>가격대</span><select id="price-filter"><option value="">전체 가격</option><option value="100000">₩100,000 이상</option><option value="500000">₩500,000 이상</option><option value="1000000">₩1,000,000 이상</option></select></label>
+        </div>
+        <div id="notice" class="notice hidden" role="status"></div>
+        <div id="loading" class="loading-state"><span class="spinner"></span><strong>카드 카탈로그를 불러오고 있어요</strong><span>카드 데이터 제공처에 연결 중입니다.</span></div>
+        <div id="empty-state" class="empty-state hidden"><div class="empty-icon">⌕</div><strong id="empty-title">아직 표시할 카드팩이 없습니다</strong><p id="empty-copy">카탈로그 API 연결 상태를 확인한 뒤 다시 시도해 주세요.</p><button class="primary-button" id="empty-retry">다시 불러오기 <span>→</span></button></div>
+        <div id="pack-grid" class="pack-grid"></div>
+        <div id="card-view" class="card-view hidden"></div>
+        <div class="source-note"><span class="source-icon">ⓘ</span><span>카드 목록: <b>TCGdex API</b> · 가격 정보: 별도 가격 API 연결 시 표시 · 한국 내 판매 여부는 공식 판매 정보가 확인되지 않으면 미확인으로 표시합니다.</span></div>
+      </section>
+
+      <section class="insight-band">
+        <div><div class="eyebrow section-eyebrow">MARKET SNAPSHOT</div><h2>확인된 데이터만,<br /><em>투명하게.</em></h2><p>가격이 제공되지 않으면 임의 추정 없이 가격 정보 없음으로 표시합니다. 지역·언어별 카드 가격은 서로 다를 수 있습니다.</p></div>
+        <div class="insight-metrics"><div><span>불러온 카드 중 100,000원 이상</span><b id="insight-high">—</b><small>확인된 가격 기준</small></div><div><span>확인된 카드 중 고가 비율</span><b id="insight-ratio">—</b><small>시세가 확인된 카드 기준</small></div><div><span>카탈로그 정보</span><b id="insight-catalog">불러오는 중</b><small>TCGdex 등록 카드팩</small></div></div>
+      </section>
+    </main>
+
+    <footer><a class="brand footer-brand" href="#home"><span class="brand-mark"><span></span></span><span>card<span class="brand-accent">log</span><small>POKÉMON TCG EXPLORER</small></span></a><p>독립적인 팬 프로젝트입니다. Pokémon 및 Pokémon TCG는 각 권리자의 상표입니다.</p><span>정보 출처와 갱신 시각은 각 데이터와 함께 표시됩니다.</span></footer>
+    <dialog id="card-dialog" class="card-dialog"><button class="dialog-close" aria-label="닫기">×</button><div id="dialog-content"></div></dialog>
+  </body>
+</html>

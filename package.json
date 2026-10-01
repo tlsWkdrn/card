@@ -1,0 +1,12 @@
+{
+  "name": "cardlog-pokemon-tcg-explorer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "포켓몬 TCG 카드팩 탐색 및 검증된 가격 정보 연동 서비스",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
