@@ -5,6 +5,7 @@ const path = require('node:path');
 const PORT = Number(process.env.PORT || 3000);
 const API_BASE = process.env.TCGDEX_API_BASE || 'https://api.tcgdex.net/v2/ko';
 const EN_API_BASE = process.env.TCGDEX_EN_API_BASE || 'https://api.tcgdex.net/v2/en';
+const JA_API_BASE = process.env.TCGDEX_JA_API_BASE || 'https://api.tcgdex.net/v2/ja';
 const CACHE_TTL = Number(process.env.CACHE_TTL_SECONDS || 900) * 1000;
 const cache = new Map();
 const root = __dirname;
@@ -28,7 +29,7 @@ async function cached(key, loader, ttl = CACHE_TTL) {
 }
 
 async function fetchJson(url, options) {
-  const response = await fetch(url, { headers: { Accept: 'application/json', ...(options?.headers || {}) }, signal: AbortSignal.timeout(12000) });
+  const response = await fetch(url, { headers: { Accept: 'application/json', ...(options?.headers || {}) }, signal: AbortSignal.timeout(30000) });
   if (!response.ok) throw new Error(`데이터 제공처 응답 오류 (${response.status})`);
   return response.json();
 }
@@ -146,7 +147,7 @@ function parseCsvLine(line) {
 
 async function pokemonNames() {
   return cached('pokemon-names-ko-en', async () => {
-    const fallback = { '가디안': 'Gardevoir', '피카츄': 'Pikachu', '리자몽': 'Charizard', '이상해씨': 'Bulbasaur', '꼬부기': 'Squirtle', '뮤츠': 'Mewtwo', '루카리오': 'Lucario', '이브이': 'Eevee' };
+    const fallback = { '가디안': 'Gardevoir', '피카츄': 'Pikachu', '리자몽': 'Charizard', '이상해씨': 'Bulbasaur', '꼬부기': 'Squirtle', '뮤츠': 'Mewtwo', '루카리오': 'Lucario', '이브이': 'Eevee', '꿰뚫는화염': 'Gouging Fire', '굽이치는물결': 'Walking Wake', '날뛰는우레': 'Raging Bolt', '날개치는머리': 'Flutter Mane', '바다그다': 'Wiglett', '바닥트리오': 'Wugtrio', '주문박스': 'Buddy-Buddy Poffin', '탐험가의 선도': "Explorer's Guidance", '비파': 'Eri', '유빈의 확신': "Morty's Conviction", '알로라': 'Alolan', '에너지 회수': 'Energy Retrieval', '큰말라사다': 'Big Malasada', '네스트볼': 'Nest Ball', '포켓몬 교체': 'Switch', '독침': 'Poison Barb', '스컬단의 잔당': 'Team Skull Grunt', '릴리에': 'Lillie', '레인보우에너지': 'Rainbow Energy', '기본초에너지': 'Basic Psychic Energy', '아쿠아패치': 'Aqua Patch', '구조하이퍼': 'Rescue Stretcher', '마오': 'Mallow', '샘의 언덕': 'Brooklet Hill', '개조해머': 'Enhanced Hammer', '기본격투에너지': 'Basic Fighting Energy' };
     try {
       const csv = await fetch('https://raw.githubusercontent.com/PokeAPI/pokedex/master/pokedex/data/csv/pokemon_species_names.csv', { signal: AbortSignal.timeout(8000) }).then(async response => {
         if (!response.ok) throw new Error('Korean name dictionary unavailable');
@@ -161,6 +162,7 @@ async function pokemonNames() {
       }
       const aliases = { ...fallback };
       for (const [id, name] of korean) if (name && english.has(id)) aliases[name] = english.get(id);
+      Object.assign(aliases, fallback);
       return aliases;
     } catch {
       return fallback;
@@ -168,7 +170,31 @@ async function pokemonNames() {
   }, 24 * 60 * 60 * 1000);
 }
 
+async function japanesePokemonNames() {
+  return cached('pokemon-names-ja-en', async () => {
+    const fallback = { 'カイリュー': 'Dragonite', 'ピカチュウ': 'Pikachu', 'リザードン': 'Charizard', 'ミュウツー': 'Mewtwo', 'ウガツホムラ': 'Gouging Fire', 'ウネルミナモ': 'Walking Wake', 'タケルライコ': 'Raging Bolt', 'ハバタクカミ': 'Flutter Mane', 'ウミディグダ': 'Wiglett', 'ウミトリオ': 'Wugtrio', 'なかよしポフィン': 'Buddy-Buddy Poffin', '探検家の先導': "Explorer's Guidance", 'ビワ': 'Eri', 'マツバの確信': "Morty's Conviction", 'アローラ': 'Alolan', 'クラッシュハンマー': 'Crushing Hammer', 'タイマーボール': 'Timer Ball', 'むしよけスプレー': 'Repel', 'ロトム図鑑': 'Rotom Dex', '学習装置': 'Exp. Share', 'イリマ': 'Ilima', 'ククイ博士': 'Professor Kukui', 'ダブル無色エネルギー': 'Double Colorless Energy', 'ハイパーボール': 'Ultra Ball', '基本鋼エネルギー': 'Basic Metal Energy', 'エネルギー回収': 'Energy Retrieval', 'おおきいマラサダ': 'Big Malasada', 'ネストボール': 'Nest Ball', 'ポケモンいれかえ': 'Switch', 'どくバリ': 'Poison Barb', 'スカル団のしたっぱ': 'Team Skull Grunt', 'リーリエ': 'Lillie', 'レインボーエネルギー': 'Rainbow Energy', '基本超エネルギー': 'Basic Psychic Energy', 'アクアパッチ': 'Aqua Patch', 'レスキュータンカ': 'Rescue Stretcher', 'マオ': 'Mallow', 'せせらぎの丘': 'Brooklet Hill', '改造ハンマー': 'Enhanced Hammer', '基本闘エネルギー': 'Basic Fighting Energy' };
+    try {
+      const csv = await fetch('https://raw.githubusercontent.com/PokeAPI/pokedex/master/pokedex/data/csv/pokemon_species_names.csv', { signal: AbortSignal.timeout(8000) }).then(async response => {
+        if (!response.ok) throw new Error('Pokémon name dictionary unavailable');
+        return response.text();
+      });
+      const japanese = new Map();
+      const english = new Map();
+      for (const line of csv.split(/\r?\n/).slice(1)) {
+        const [speciesId, languageId, name] = parseCsvLine(line);
+        if (languageId === '1') japanese.set(speciesId, name);
+        if (languageId === '9') english.set(speciesId, name);
+      }
+      const aliases = { ...fallback };
+      for (const [id, name] of japanese) if (name && english.has(id)) aliases[name] = english.get(id);
+      Object.assign(aliases, fallback);
+      return aliases;
+    } catch { return fallback; }
+  }, 24 * 60 * 60 * 1000);
+}
+
 function normalizeSearch(value) { return String(value || '').normalize('NFC').trim().toLocaleLowerCase(); }
+function normalizeCardName(value) { return String(value || '').normalize('NFC').toLocaleLowerCase().replace(/[^a-z0-9]/g, ''); }
 
 function localizePokemonName(name, aliases) {
   let result = String(name || '');
@@ -177,6 +203,7 @@ function localizePokemonName(name, aliases) {
     const escaped = english.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     result = result.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), korean);
   }
+  result = result.replace(/\bAlolan\s+/gi, '알로라 ').replace(/\bGalarian\s+/gi, '가라르 ').replace(/\bHisuian\s+/gi, '히스이 ');
   return result;
 }
 
@@ -186,6 +213,84 @@ function englishSearchTerms(query, aliases) {
     translated = translated.replaceAll(korean, english);
   }
   return normalizeSearch(translated);
+}
+
+function japaneseCardNameToEnglish(name, aliases) {
+  let result = String(name || '');
+  result = result.replaceAll('アローラ', 'Alolan ').replaceAll('ガラル', 'Galarian ').replaceAll('ヒスイ', 'Hisuian ');
+  for (const [japanese, english] of Object.entries(aliases).sort((a, b) => b[0].length - a[0].length)) result = result.replaceAll(japanese, english);
+  return result;
+}
+
+function koreanCardNameToEnglish(name, aliases) {
+  let result = String(name || '');
+  result = result.replaceAll('알로라', 'Alolan ').replaceAll('가라르', 'Galarian ').replaceAll('히스이', 'Hisuian ');
+  for (const [korean, english] of Object.entries(aliases).sort((a, b) => b[0].length - a[0].length)) result = result.replaceAll(korean, english);
+  return result;
+}
+
+async function addReferenceImages(cards, sourceSet, sourceLanguage = 'ja') {
+  const [enSets, japaneseAliases, koreanAliases] = await Promise.all([
+    cached('sets:en', () => fetchJson(`${EN_API_BASE}/sets`)),
+    japanesePokemonNames(),
+    pokemonNames(),
+  ]);
+  const enSetIds = new Set(enSets.map(set => String(set.id).toLowerCase()));
+  const exactId = String(sourceSet.id || '').toLowerCase();
+  const baseId = (String(sourceSet.id || '').match(/^[a-z]+\d+/i) || [exactId])[0].toLowerCase();
+  const numericBase = baseId.match(/^([a-z]+)(\d+)$/i);
+  const paddedBaseId = numericBase ? `${numericBase[1]}${String(Number(numericBase[2])).padStart(2, '0')}` : baseId;
+  const candidateIds = [...new Set([exactId, baseId, paddedBaseId, `${baseId}.5`, `${paddedBaseId}.5`])].filter(id => enSetIds.has(id));
+  const candidateSummaries = candidateIds.map(id => enSets.find(set => String(set.id).toLowerCase() === id)).filter(Boolean);
+  const enCardsBySet = await Promise.all(candidateSummaries.map(set => cached(`set:en:${set.id}`, () => fetchJson(`${EN_API_BASE}/sets/${encodeURIComponent(set.id)}`))));
+  const enCards = enCardsBySet.flatMap(set => set.cards || []);
+  const byName = new Map();
+  for (const card of enCards) {
+    if (!card.image) continue;
+    const key = normalizeCardName(card.name);
+    if (!byName.has(key)) byName.set(key, []);
+    byName.get(key).push(card);
+  }
+  const translatedCards = await mapLimit(cards, 8, async card => {
+    let japaneseName = null;
+    if (sourceLanguage === 'ko' && !card.image) {
+      try {
+        const japaneseCard = await cached(`card:ja:${card.id}`, () => fetchJson(`${JA_API_BASE}/cards/${encodeURIComponent(card.id)}`));
+        japaneseName = japaneseCard.name;
+      } catch { /* The Korean card name mapping below remains the fallback. */ }
+    }
+    return {
+      card,
+      englishName: japaneseName ? japaneseCardNameToEnglish(japaneseName, japaneseAliases) : sourceLanguage === 'ko' ? koreanCardNameToEnglish(card.name, koreanAliases) : japaneseCardNameToEnglish(card.name, japaneseAliases),
+    };
+  });
+  const namesToFind = [...new Set(translatedCards.filter(item => !item.card.image && !(byName.get(normalizeCardName(item.englishName)) || []).length).map(item => item.englishName).filter(Boolean))];
+  const searchedImages = new Map();
+  await mapLimit(namesToFind, 8, async name => {
+    const terms = [name, name.match(/[A-Za-z][A-Za-z'-]*/)?.[0]].filter(Boolean);
+    for (const term of [...new Set(terms)]) {
+      try {
+        const found = await cached(`card-image-search:${normalizeCardName(term)}`, () => fetchJson(`${EN_API_BASE}/cards?name=${encodeURIComponent(term)}`), 24 * 60 * 60 * 1000);
+        const images = Array.isArray(found) ? found.filter(card => card.image) : [];
+        if (images.length) { searchedImages.set(normalizeCardName(name), images); break; }
+      } catch { /* Images remain optional; the card and price data are still shown. */ }
+    }
+  });
+  return translatedCards.map(({ card, englishName }) => {
+    if (card.image) return card;
+    const key = normalizeCardName(englishName);
+    const candidates = [...(byName.get(key) || searchedImages.get(key) || [])].sort((a, b) => {
+      const setId = item => String(item.id).split('-')[0].toLowerCase();
+      const aRank = candidateIds.indexOf(setId(a)), bRank = candidateIds.indexOf(setId(b));
+      return (aRank < 0 ? Number.MAX_SAFE_INTEGER : aRank) - (bRank < 0 ? Number.MAX_SAFE_INTEGER : bRank);
+    });
+    const imageCard = candidates[0];
+    return {
+      ...card,
+      displayName: sourceLanguage === 'ko' ? (card.displayName || card.name) : localizePokemonName(englishName, koreanAliases) || card.name,
+      ...(imageCard ? { image: imageCard.image, imageIsReference: true, imageSourceCardId: imageCard.id } : {}),
+    };
+  });
 }
 
 async function api(req, res, pathname, searchParams) {
@@ -253,9 +358,20 @@ async function api(req, res, pathname, searchParams) {
   const setMatch = pathname.match(/^\/api\/sets\/([^/]+)$/);
   if (setMatch) {
     const id = decodeURIComponent(setMatch[1]);
-    const language = searchParams.get('lang') === 'en' ? 'en' : 'ko';
-    const base = language === 'en' ? EN_API_BASE : API_BASE;
-    const set = await cached(`set:${language}:${id}`, () => fetchJson(`${base}/sets/${encodeURIComponent(id)}`));
+    const requestedLanguage = ['en', 'ja'].includes(searchParams.get('lang')) ? searchParams.get('lang') : 'ko';
+    let language = requestedLanguage;
+    let base = language === 'en' ? EN_API_BASE : language === 'ja' ? JA_API_BASE : API_BASE;
+    let set = await cached(`set:${language}:${id}`, () => fetchJson(`${base}/sets/${encodeURIComponent(id)}`));
+    let catalogFallback = false;
+    if (language === 'ko' && (!Array.isArray(set.cards) || set.cards.length === 0)) {
+      try {
+        const japaneseSet = await cached(`set:ja:${id}`, () => fetchJson(`${JA_API_BASE}/sets/${encodeURIComponent(id)}`));
+        if (Array.isArray(japaneseSet.cards) && japaneseSet.cards.length) {
+          set = { ...japaneseSet, id, name: set.name || japaneseSet.name, cardCount: set.cardCount || japaneseSet.cardCount, releaseDate: set.releaseDate || japaneseSet.releaseDate, serie: set.serie || japaneseSet.serie };
+          language = 'ja'; base = JA_API_BASE; catalogFallback = true;
+        }
+      } catch { /* The Korean set response remains usable even when no Japanese fallback exists. */ }
+    }
     const summaries = Array.isArray(set.cards) ? set.cards : [];
     // Set records contain compact card summaries. Enrich only the selected set, with a
     // small concurrency limit and per-card caching, so details are real API data.
@@ -264,15 +380,17 @@ async function api(req, res, pathname, searchParams) {
       try { return { ...summary, ...await cached(`card:${language}:${summary.id}`, () => fetchJson(`${base}/cards/${encodeURIComponent(summary.id)}`)), language }; }
       catch { return summary; }
     });
-    const pricing = await pricesForCards(cards);
+    const catalogCards = catalogFallback || cards.some(card => !card.image) ? await addReferenceImages(cards, set, language) : cards;
+    const pricing = await pricesForCards(catalogCards);
     const priceMap = new Map(pricing.prices.map(price => [price.cardId, price]));
-    return send(res, 200, { ...set, series: set.series || set.serie || null, language, cards: cards.map(card => ({ ...card, priceInfo: priceMap.get(card.id) || null })), priceConfigured: pricing.configured, priceProviderConfigured: pricing.providerConfigured, priceSource: pricing.source, priceCheckedAt: pricing.checkedAt, priceError: pricing.error, updatedAt: new Date().toISOString() });
+    const hasReferenceImages = catalogCards.some(card => card.imageIsReference);
+    return send(res, 200, { ...set, series: set.series || set.serie || null, language, catalogFallback, imageNote: hasReferenceImages ? '일부 카드 사진은 같은 카드의 국제판 참고 이미지이며 한국어판·일본어판 실제 인쇄 이미지와 다를 수 있습니다.' : null, cards: catalogCards.map(card => ({ ...card, setName: set.name, priceInfo: priceMap.get(card.id) || null })), priceConfigured: pricing.configured, priceProviderConfigured: pricing.providerConfigured, priceSource: pricing.source, priceCheckedAt: pricing.checkedAt, priceError: pricing.error, updatedAt: new Date().toISOString() });
   }
   const cardMatch = pathname.match(/^\/api\/cards\/([^/]+)$/);
   if (cardMatch) {
     const id = decodeURIComponent(cardMatch[1]);
-    const language = searchParams.get('lang') === 'en' ? 'en' : 'ko';
-    const base = language === 'en' ? EN_API_BASE : API_BASE;
+    const language = ['en', 'ja'].includes(searchParams.get('lang')) ? searchParams.get('lang') : 'ko';
+    const base = language === 'en' ? EN_API_BASE : language === 'ja' ? JA_API_BASE : API_BASE;
     const card = await cached(`card:${language}:${id}`, () => fetchJson(`${base}/cards/${encodeURIComponent(id)}`));
     const pricing = await pricesForCards([{ ...card, id }]);
     return send(res, 200, { ...card, language, priceInfo: pricing.prices.find(price => price.cardId === id) || null, priceConfigured: pricing.configured, priceProviderConfigured: pricing.providerConfigured, priceSource: pricing.source, priceCheckedAt: pricing.checkedAt, priceError: pricing.error });
